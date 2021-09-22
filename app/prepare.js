@@ -1,49 +1,51 @@
+'use strict';
+const tar = require('tar');
 
-const tar = require('tar')
-
-const http = require("http");
+const http = require('http');
 // const { createHash } = require('crypto')
-const fnv = require('fnv-plus')
-const buffer = require("buffer");
+const fnv = require('fnv-plus');
+// const buffer = require('buffer');
+const map = new Map();
+const pack = new tar.Pack({ gzip: true, highWaterMark: 10 * 1024, statCache: map });
+const option = {
+  host: '127.0.0.1',
+  path: '/api/prepare',
+  port: 7001,
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/octet-stream',
+    Connection: 'keep-alive',
+  },
+};
 
-var pack = new tar.Pack({gzip:true,highWaterMark:10*1024})
-let option = {
-    host: "127.0.0.1",
-    path: "/api/prepare",
-    port: 7001,
-    method:"POST",
-    headers:{
-        'Content-Type': 'application/octet-stream',
-        'Connection': 'keep-alive',
-    }
-}
-
-let req = http.request(option)
+const req = http.request(option);
 // req.on()
 // fstream.Reader({'path':"/home/bryandu/桌面/原片",'type':'Directory'})
 // .pipe()
 // pipeline(
 //
 //
-// )
-pack.add("/home/bryandu/桌面/1").end()
 
-pack.on('data',chunk=>{
-    let hash = fnv.hash(chunk,64).hex()
-    let bu = new Buffer.from(hash)
-    let c = Buffer.concat([bu,chunk])
-    console.log(hash)
-    req.write(c)
-    pack.pause()
-})
-pack.on('end',()=>{
-    req.write('end')
-})
-req.on('response',response => {
-    response.on('data',chunk => {
-        console.log(chunk.toString('utf8'))
-        if (chunk.toString('utf8') === 'recv'){
-            pack.resume()
-        }
-    })
-})
+// )
+pack.add('/home/bryandu/桌面/1').end();
+console.log(map);
+pack.on('data', chunk => {
+  console.log(pack.readableLength);
+  const hash = fnv.hash(chunk, 64).hex();
+  const bu = new Buffer.from(hash);
+  const c = Buffer.concat([ bu, chunk ]);
+  console.log(hash);
+  req.write(c);
+  pack.pause();
+});
+pack.on('end', () => {
+  req.write('end');
+});
+req.on('response', response => {
+  response.on('data', chunk => {
+    console.log(chunk.toString('utf8'));
+    if (chunk.toString('utf8') === 'recv') {
+      pack.resume();
+    }
+  });
+});

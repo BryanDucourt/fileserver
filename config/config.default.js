@@ -16,16 +16,17 @@ module.exports = appInfo => {
   config.keys = appInfo.name + '_1631706742115_9313';
 
   // add your middleware config here
-  config.middleware = []
+  config.middleware = [];
   // add your user config here
   const userConfig = {
     // myAppName: 'egg',
   };
+
   config.security = {
-    csrf:{
-      ignore:'/api/prepare'
-    }
-  }
+    csrf: {
+      ignore: '/api/prepare',
+    },
+  };
 
   return {
     ...config,
